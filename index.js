@@ -36,13 +36,14 @@ mongoose.connect("mongodb+srv://admin:admin@cluster0.3ewmz.mongodb.net/");
 const { S3Client } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
 const multerS3 = require('multer-s3');
+const { env } = require("process");
 require('dotenv').config();
 // Cấu hình AWS SDK
 const s3Client = new S3Client({
   region: 'ap-southeast-1',
   credentials: {
-    accessKeyId: 'AKIATQPD7RMXB55AWZ5C',
-    secretAccessKey: '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',
+    accessKeyId: AWS_ACCESS_KEY_ID,
+    secretAccessKey: AWS_SECRET_ACCESS_KEY,
   },
 });
 
@@ -132,44 +133,6 @@ app.get("/1", async (req, res) =>{
   console.log(product)
   res.send(product)
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
