@@ -33,39 +33,42 @@ mongoose.connect("mongodb+srv://admin:admin@cluster0.3ewmz.mongodb.net/");
 
 
 // // Route for Images folder
-// app.use('/images', express.static('upload/images'));
-const AWS = require('aws-sdk');
+const { S3Client } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
 const multerS3 = require('multer-s3');
-
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+require('dotenv').config();
+// Cấu hình AWS SDK
+const s3Client = new S3Client({
   region: 'ap-southeast-1',
+  credentials: {
+    accessKeyId: 'AKIATQPD7RMXB55AWZ5C',
+    secretAccessKey: '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',
+  },
 });
 
-const s3 = new AWS.S3();
-
+// Cấu hình multer với multer-s3
 const upload = multer({
   storage: multerS3({
-    s3: s3,
+    s3: s3Client,
     bucket: 'shopclothes',
     acl: 'public-read',
     metadata: (req, file, cb) => {
       cb(null, { fieldName: file.fieldname });
-    },
+    }, 
     key: (req, file, cb) => {
-      cb(null, Date.now().toString() + path.extname(file.originalname));
+      cb(null, Date.now().toString()  + path.extname(file.originalname));
     }
   })
 });
+// 
 
-app.post('/upload', upload.single('product'), (req, res) => {
+// Định nghĩa endpoint upload
+app.post('/upload', upload.array('product', 10), (req, res) => {
   res.json({
     success: 1,
-    image_url: req.file.location
+    image_url: req.files.map(image => image.location)
   });
 });
-
 
 
 // MiddleWare to fetch user from token
@@ -99,13 +102,77 @@ const Product = mongoose.model("Product", {
   id: { type: Number, required: true },
   name: { type: String, required: true },
   description: { type: String, required: true },
-  image: { type: String, required: true },
+  image: [String],
   category: { type: String, required: true },
   new_price: { type: Number },
   old_price: { type: Number },
   date: { type: Date, default: Date.now },
   avilable: { type: Boolean, default: true },
 });
+
+
+
+// add image 
+app.get("/allimages", async (req, res) =>{
+  let product = await Product.find({}, {image:1, _id:0});
+  let images = product.map(item => (
+    item.image
+  ))
+  res.send(images.flat())
+})
+
+// findbyImage
+app.get("/1", async (req, res) =>{
+  
+  let urlImage = [
+    "https://shopclothes.s3.ap-southeast-1.amazonaws.com/1726568158233.jpg",
+    "https://shopclothes.s3.ap-southeast-1.amazonaws.com/1726568149866.png"
+  ]
+  let product = await Product.find({ image: { $elemMatch: { $in: urlImage } } })
+  console.log(product)
+  res.send(product)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // ROOT API Route For Testing
@@ -174,11 +241,13 @@ app.post('/signup', async (req, res) => {
 
 
 // endpoint for getting all products data
-app.get("/allproducts", async (req, res) => {
-  let products = await Product.find({});
+app.get("/allproducts/:type", async (req, res) => {
+  let type = req.params.type;
+  let products = (type !== "all" ? await Product.find({ category: type}) : await Product.find());
   console.log("All Products");
   res.send(products);
 });
+
 
 
 // endpoint for getting latest products data
