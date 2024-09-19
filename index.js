@@ -42,8 +42,8 @@ require('dotenv').config();
 const s3Client = new S3Client({
   region: 'ap-southeast-1',
   credentials: {
-    accessKeyId: AWS_ACCESS_KEY_ID,
-    secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    accessKeyId: 'AKIATQPD7RMXB55AWZ5C',
+    secretAccessKey: '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',
   },
 });
 
